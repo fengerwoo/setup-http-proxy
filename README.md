@@ -171,17 +171,6 @@ export https_proxy="http://username:password@server_ip:3128"
 ```bash
 # 基本测试（假设用户名是 proxy_xhkxyaks，密码是 AeBGBX7-7CVoF!QF）
 curl -x http://proxy_xhkxyaks:AeBGBX7-7CVoF%21QF@localhost:3128 -L https://httpbin.org/ip
-
-# 如果密码包含特殊字符，使用 --proxy-user 参数更可靠
-curl -L https://httpbin.org/ip \
-  --proxy http://localhost:3128 \
-  --proxy-user "proxy_xhkxyaks:AeBGBX7-7CVoF!QF"
-
-# 测试 HTTP 网站
-curl -x http://用户名:密码@localhost:3128 http://www.baidu.com
-
-# 测试 HTTPS 网站
-curl -x http://用户名:密码@localhost:3128 https://www.google.com
 ```
 
 **方法二：测试认证功能**
@@ -267,8 +256,8 @@ docker rmi ghcr.io/fengerwoo/setup-http-proxy:latest
 ```
 
 ### 传统部署管理
-
 **用户管理：**
+
 ```bash
 # 修改现有用户密码
 sudo htpasswd /etc/squid/passwords username
@@ -334,7 +323,6 @@ sudo rm -rf /etc/squid /var/log/squid /var/spool/squid
 ## 🐛 故障排除
 
 ### 无法连接到代理
-
 ```bash
 # 检查服务状态
 sudo systemctl status squid
@@ -357,7 +345,6 @@ sudo htpasswd -c /etc/squid/passwords username
 ```
 
 ### 查看详细错误
-
 ```bash
 # 查看 Squid 日志
 sudo journalctl -u squid -n 50
