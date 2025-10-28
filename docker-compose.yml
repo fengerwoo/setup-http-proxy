@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  http-proxy:
+    image: ghcr.io/fengerwoo/setup-http-proxy:latest
+    # 或使用本地构建:
+    # build: .
+    container_name: http-proxy
+    ports:
+      - "3128:3128"
+    environment:
+      # 可选：自定义用户名和密码
+      # 如果不设置，将自动生成随机用户名和密码
+      # - PROXY_USERNAME=myuser
+      # - PROXY_PASSWORD=mypassword
+    restart: unless-stopped
+    # 可选：挂载卷以持久化日志
+    # volumes:
+    #   - ./logs:/var/log/squid

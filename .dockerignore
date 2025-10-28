@@ -1,0 +1,19 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# 文档
+README.md
+*.md
+
+# 临时文件
+*.log
+*.tmp
+.DS_Store
+
+# GitHub
+.github

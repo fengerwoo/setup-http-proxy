@@ -16,13 +16,89 @@
 
 ## 📋 系统要求
 
+### 传统部署
 - Ubuntu 18.04 或更高版本
 - Root 权限或 sudo 访问权限
 - 至少 512MB 可用内存
 
+### Docker 部署
+- Docker 20.10 或更高版本
+- 至少 256MB 可用内存
+
 ## 🚀 快速开始
 
-### 一键安装
+### 方式一：Docker 部署（推荐）
+
+**使用 GitHub Container Registry 镜像：**
+
+```bash
+# 使用随机生成的用户名和密码
+docker run -d \
+  --name http-proxy \
+  -p 3128:3128 \
+  --restart unless-stopped \
+  ghcr.io/fengerwoo/setup-http-proxy:latest
+
+# 查看生成的用户名和密码
+docker logs http-proxy
+```
+
+**自定义用户名和密码：**
+
+```bash
+docker run -d \
+  --name http-proxy \
+  -p 3128:3128 \
+  -e PROXY_USERNAME=myuser \
+  -e PROXY_PASSWORD=mypassword \
+  --restart unless-stopped \
+  ghcr.io/fengerwoo/setup-http-proxy:latest
+```
+
+**使用 docker-compose：**
+
+创建 `docker-compose.yml` 文件：
+
+```yaml
+version: '3.8'
+
+services:
+  http-proxy:
+    image: ghcr.io/fengerwoo/setup-http-proxy:latest
+    container_name: http-proxy
+    ports:
+      - "3128:3128"
+    environment:
+      - PROXY_USERNAME=myuser
+      - PROXY_PASSWORD=mypassword
+    restart: unless-stopped
+```
+
+启动服务：
+
+```bash
+docker-compose up -d
+```
+
+**本地构建镜像：**
+
+```bash
+# 克隆仓库
+git clone https://github.com/fengerwoo/setup-http-proxy.git
+cd setup-proxy
+
+# 构建镜像
+docker build -t http-proxy .
+
+# 运行容器
+docker run -d \
+  --name http-proxy \
+  -p 3128:3128 \
+  --restart unless-stopped \
+  http-proxy
+```
+
+### 方式二：传统安装
 
 ```bash
 wget -qO- https://raw.githubusercontent.com/fengerwoo/setup-http-proxy/main/setup-proxy.sh | sudo bash
@@ -87,10 +163,112 @@ export https_proxy="http://username:password@server_ip:3128"
 - 端口：`3128`
 - 需要认证，输入用户名和密码
 
+### 测试代理连接
+
+安装或部署完成后，可以使用以下命令测试代理是否正常工作：
+
+**方法一：使用 curl（推荐）**
+```bash
+# 基本测试（假设用户名是 proxy_xhkxyaks，密码是 AeBGBX7-7CVoF!QF）
+curl -x http://proxy_xhkxyaks:AeBGBX7-7CVoF%21QF@localhost:3128 -L https://httpbin.org/ip
+
+# 如果密码包含特殊字符，使用 --proxy-user 参数更可靠
+curl -L https://httpbin.org/ip \
+  --proxy http://localhost:3128 \
+  --proxy-user "proxy_xhkxyaks:AeBGBX7-7CVoF!QF"
+
+# 测试 HTTP 网站
+curl -x http://用户名:密码@localhost:3128 http://www.baidu.com
+
+# 测试 HTTPS 网站
+curl -x http://用户名:密码@localhost:3128 https://www.google.com
+```
+
+**方法二：测试认证功能**
+```bash
+# 测试无认证访问（应该返回 407 错误）
+curl -I -x http://localhost:3128 http://www.baidu.com
+
+# 测试正确认证（应该返回 200）
+curl -I -x http://用户名:密码@localhost:3128 http://www.baidu.com
+```
+
+**特殊字符处理说明：**
+- URL 中的特殊字符需要转义：
+  - `!` → `%21`
+  - `#` → `%23`
+  - `@` → `%40`
+  - `$` → `%24`
+  - `%` → `%25`
+- 或者使用 `--proxy-user` 参数（无需转义）
+
+**预期输出：**
+```json
+{
+  "origin": "您的服务器IP地址"
+}
+```
+
 ## 🔧 管理命令
 
-### 用户管理
+### Docker 部署管理
 
+**查看容器日志（包含用户名密码）：**
+```bash
+docker logs http-proxy
+```
+
+**用户管理：**
+```bash
+# 修改现有用户密码
+docker exec -it http-proxy htpasswd /etc/squid/passwords username
+
+# 添加新用户
+docker exec -it http-proxy htpasswd /etc/squid/passwords new_username
+
+# 删除用户
+docker exec -it http-proxy htpasswd -D /etc/squid/passwords username
+
+# 查看所有用户
+docker exec -it http-proxy cat /etc/squid/passwords | cut -d: -f1
+
+# 查看保存的代理信息
+docker exec -it http-proxy cat /var/log/squid/proxy_info.txt
+```
+
+**容器管理：**
+```bash
+# 重启容器
+docker restart http-proxy
+
+# 停止容器
+docker stop http-proxy
+
+# 启动容器
+docker start http-proxy
+
+# 查看容器状态
+docker ps | grep http-proxy
+
+# 查看访问日志
+docker exec -it http-proxy tail -f /var/log/squid/access.log
+
+# 查看错误日志
+docker exec -it http-proxy tail -f /var/log/squid/cache.log
+```
+
+**卸载：**
+```bash
+# 停止并删除容器
+docker stop http-proxy && docker rm http-proxy
+
+# 删除镜像
+docker rmi ghcr.io/fengerwoo/setup-http-proxy:latest
+```
+
+### 传统部署管理
+
+**用户管理：**
 ```bash
 # 修改现有用户密码
 sudo htpasswd /etc/squid/passwords username
@@ -105,8 +283,7 @@ sudo htpasswd -D /etc/squid/passwords username
 sudo cat /etc/squid/passwords | cut -d: -f1
 ```
 
-### 服务管理
-
+**服务管理：**
 ```bash
 # 重启 Squid 服务
 sudo systemctl restart squid
@@ -127,8 +304,7 @@ sudo tail -f /var/log/squid/access.log
 sudo tail -f /var/log/squid/cache.log
 ```
 
-### 卸载
-
+**卸载：**
 ```bash
 # 完全卸载 Squid 和配置文件
 sudo apt remove --purge squid -y
